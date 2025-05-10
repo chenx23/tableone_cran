@@ -244,7 +244,7 @@ ModuleQuoteAndPrintMat <- function(matObj, quote = FALSE, printToggle = TRUE) {
 ################################################################################
 
 ## Define a function to format a normal variable
-ModuleConvertNormal <- function(rowMat, digits, formatOptions = NULL) {
+ModuleConvertNormal <- function(rowMat, digits, ciDigits, formatOptions = NULL) {
 
     ## Suppress leading blanks for justification for (SD)
     formatOptions$trim <- TRUE
@@ -254,10 +254,18 @@ ModuleConvertNormal <- function(rowMat, digits, formatOptions = NULL) {
     ## No need to round col1, ModuleContFormatStrata should do this after
     ## stacking up means and medians.
     ## unname() not to leave mean as a data frame row name.
-    data.frame(col1 = unname(rowMat[,"mean"]),
-               col2 = paste0(" (",
+    data.frame(col1 = c(unname(rowMat[,"mean"]), NA, rowMat[,'median'], unname(rowMat[, 'miss'])),
+               col2 = c(paste0(" (",
                              ModuleFormatNumericVector(rowMat[,"sd"], digits, formatOptions),
                              ")"),
+                        paste0(' [', round(rowMat[, 'lower.95ci'], ciDigits), ', ',
+                               round(rowMat[, 'upper.95ci'], ciDigits), ']'),
+                        paste0(" [",
+                               ModuleFormatNumericVector(rowMat[,"p25"], digits, formatOptions),
+                               ", ",
+                               ModuleFormatNumericVector(rowMat[,"p75"], digits, formatOptions),
+                               "]"),
+                        paste0(' (', round(rowMat[, 'p.miss'], digits), ')')),
                stringsAsFactors = FALSE)
 }
 
@@ -339,7 +347,7 @@ ModuleContFormatStrata <- function(ContTable, nVars, listOfFunctions, digits, fo
                    formatOptions$justify <- "right"
                    ## ModuleFormatNumericVector performs rounding.
                    out$col1 <- ModuleFormatNumericVector(out$col1, digits, formatOptions)
-
+                   out$col1 <- gsub('NA', '  ', out$col1)
                    ## Obtain the width of the mean/median column in characters
                    nCharMeanOrMedian <- nchar(out$col1[1])
 
@@ -707,6 +715,7 @@ ModuleFormatTables <- function(x, catDigits, contDigits,
                        svyCatTable  = catDigits)[classOfTables]
 
     ## Get the formatted tables (FmtContTable, FmtCatTable)
+
     FmtTables <-
     sapply(seq_along(TableOne),
            ## loop over ContTable and CatTable
@@ -771,10 +780,10 @@ ModuleListOfOneVarTables <- function(spcFmtEltTables, MetaData) {
 
         } else {
             ## If Cont
-            nthElt <- which(var == MetaData$varNumerics)
+            nthElt <- which(var == sort(MetaData$varNumerics))
 
             ## + 1 because of sample size row
-            spcFmtEltTables$FmtContTable[nthElt + 1, , drop = FALSE]
+            spcFmtEltTables$FmtContTable[1 + ((nthElt - 1) * 4 + 1):(nthElt * 4), , drop = FALSE]
         }
     })
     lstOneVarTables

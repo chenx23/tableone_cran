@@ -29,6 +29,7 @@
 print.svyContTable <-
 function(x,                       # ContTable object
          digits = 2, pDigits = 3, # Number of digits to show
+         ciDigits = 4,            # Number of digits of confidence interval to show
          quote        = FALSE,    # Whether to show quotes
 
          missing      = FALSE,    # show missing values (not implemented yet)
@@ -115,7 +116,8 @@ function(x,                       # ContTable object
     ## Define the nonnormal formatter depending on the minMax status
     ConvertNormal <- function(rowMat) {
         ## Take minMax value from outside (NOT A STANDALONE FUNCTION!!)
-        ModuleConvertNormal(rowMat, digits = digits, formatOptions = formatOptions)
+        ModuleConvertNormal(rowMat, digits = digits, ciDigits = ciDigits, 
+                            formatOptions = formatOptions)
     }
     ## Define the nonnormal formatter depending on the minMax status
     ConvertNonNormal <- function(rowMat) {

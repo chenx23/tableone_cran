@@ -84,7 +84,8 @@ function(vars,                                   # character vector of variable 
                  "n","miss","p.miss",
                  "mean","sd",
                  "median","p25","p75","min","max",
-                 "skew","kurt"),
+                 "skew","kurt",
+                 'upper.95ci', 'lower.95ci'),
          funcAdditional,                         # named list of additional functions
          test          = TRUE,                   # Whether to include p-values
          testNormal    = oneway.test,            # test for normally distributed variables
@@ -134,7 +135,8 @@ function(vars,                                   # character vector of variable 
     funcIndexes <- pmatch(funcNames, c("n","miss","p.miss",
                                        "mean","sd",
                                        "median","p25","p75","min","max",
-                                       "skew","kurt"))
+                                       "skew","kurt", 
+                                       'upper.95ci', 'lower.95ci'))
     ## Remove NA
     funcIndexes <- funcIndexes[!is.na(funcIndexes)]
 
@@ -150,7 +152,9 @@ function(vars,                                   # character vector of variable 
                    "min"    = function(x) {min(x, na.rm = TRUE)},
                    "max"    = function(x) {max(x, na.rm = TRUE)},
                    "skew"   = function(x) {ModuleSasSkewness(x)},
-                   "kurt"   = function(x) {ModuleSasKurtosis(x)}
+                   "kurt"   = function(x) {ModuleSasKurtosis(x)}, 
+                   'upper.95ci' = function(x) {mean(x, na.rm = TRUE) + 1.96 * sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x)))}, 
+                   'lower.95ci' = function(x) {mean(x, na.rm = TRUE) - 1.96 * sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x)))}
                    )
 
     ## Keep only functions in use

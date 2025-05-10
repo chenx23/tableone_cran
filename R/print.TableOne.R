@@ -78,7 +78,7 @@ function(x,                   # TableOne object
                                     ## print.ContTable arguments passed
                                     nonnormal = nonnormal, minMax = minMax,
                                     insertLevel = showAllLevels,
-                                    
+
                                     ## FormatOptions passed
                                     formatOptions = formatOptions)
 
@@ -141,7 +141,6 @@ function(x,                   # TableOne object
                    ## List concatenation (both are lists)
                    c(lstStratumSizesRow, lstOneVarTables))
 
-
     ## Add stratification information to the column header
     ## NULL element has a length of zero
     if (length(x$ContTable) > 1) {
@@ -177,7 +176,10 @@ function(x,                   # TableOne object
 
     ## Remove spaces if asked.
     out <- ModuleRemoveSpaces(mat = out, noSpaces = noSpaces)
-
+    rownames(out)[grepl('median \\[IQR\\]', rownames(out))] <- 'median [IQR]'
+    rownames(out)[grepl('95% CI', rownames(out))] <- '95% CI'
+    rownames(out)[grepl('NA \\(%\\)', rownames(out))] <- 'NA (%)'
+    rownames(out) <- gsub('__N2F__', '', rownames(out))
     ## Modular version of quote/print toggle.
     out <- ModuleQuoteAndPrintMat(matObj = out,
                                   quote = quote, printToggle = printToggle)

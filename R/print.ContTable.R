@@ -85,6 +85,7 @@
 print.ContTable <-
 function(x,                       # ContTable object
          digits = 2, pDigits = 3, # Number of digits to show
+         ciDigits = 4,            # Number of digits of confidence interval to show
          quote        = FALSE,    # Whether to show quotes
 
          missing      = FALSE,    # show missing values (not implemented yet)
@@ -169,7 +170,8 @@ function(x,                       # ContTable object
     ## Define the nonnormal formatter depending on the minMax status
     ConvertNormal <- function(rowMat) {
         ## Take minMax value from outside (NOT A STANDALONE FUNCTION!!)
-        ModuleConvertNormal(rowMat, digits = digits, formatOptions = formatOptions)
+        ModuleConvertNormal(rowMat, digits = digits, ciDigits = ciDigits,
+                            formatOptions = formatOptions)
     }
     ## Define the nonnormal formatter depending on the minMax status
     ConvertNonNormal <- function(rowMat) {
@@ -200,13 +202,12 @@ function(x,                       # ContTable object
                            },
                            simplify = TRUE)
 
-
     ## The outer sapply should not simplify to avoid a vector
     ## Column-bind to create variables x strata matrix
     out <- do.call(cbind, out)
 
     ## Put the variables names back (looping over rows can solve this)
-    rownames(out) <- varNames
+    rownames(out) <- rep(varNames, each = 4)
 
     ## Add column names if multivariable stratification is used.
     if (length(attr(ContTable, "dimnames")) > 1) {
@@ -266,11 +267,18 @@ function(x,                       # ContTable object
 
     ## Add mean (SD) or median [IQR]/median [range] explanation if requested
     if (explain) {
+        what <- rep(' 95% CI', length(nonnormal) * 4)
         ## Create a vector of explanations to be pasted
         if (minMax == FALSE) {
-            what <- c(" (mean (SD))"," (median [IQR])")[nonnormal]
+            # what <- c(" (mean (SD))"," (median [IQR])")[nonnormal]
+            what[seq(1, length(what), by = 4)] <- " (mean (SD))"
+            what[seq(3, length(what), by = 4)] <- " (median [IQR])"
+            what[seq(4, length(what), by = 4)] <- " NA (%)"
         } else if (minMax == TRUE) {
-            what <- c(" (mean (SD))"," (median [range])")[nonnormal]
+            # what <- c(" (mean (SD))"," (median [range])")[nonnormal]
+            what[seq(1, length(what), by = 4)] <- " (mean (SD))"
+            what[seq(3, length(what), by = 4)] <- " (median [range])"
+            what[seq(4, length(what), by = 4)] <- " NA (%)"
         }
         ## Paste to the rownames
         rownames(out) <- paste0(rownames(out), what)
@@ -280,6 +288,8 @@ function(x,                       # ContTable object
     outColNames <- colnames(out)
     ## Add n at the correct location depending on the number of columns added (level and/or p)
     nRow <- c(strataN, rep("", ncol(out) - length(strataN))) # Additional padding to right
+    out <- out[order(rownames(out)), , drop = FALSE]
+
     out <- rbind(n = nRow, out)
     ## Put back the column names (overkill for non-multivariable cases)
     colnames(out) <- outColNames
